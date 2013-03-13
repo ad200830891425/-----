@@ -1,0 +1,46 @@
+Imports System.Net.NetworkInformation
+
+Public Class Form1
+    Declare Function FindWindow Lib "user32" Alias "FindWindowA" (ByVal lpClassName As String, ByVal lpWindowName As String) As Integer
+    Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hwnd As Integer, ByVal wMsg As Integer, ByVal wParam As Integer, ByVal lParam As String) As Integer
+    Declare Function SendMessageByString& Lib "user32" Alias "SendMessageA" (ByVal hwnd As Integer, ByVal wMsg As Integer, ByVal wParam As Integer, ByVal lParam As String)
+    Const WM_GETTEXT = &HD
+    Const WM_close = &H10
+
+
+    Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        Me.Visible = False
+        Dim i = 1
+        Do While i > 0
+            Dim TargetWinHandle As Integer = FindWindow(vbNullString, "Microsoft Visual C++ Runtime Library")
+            If TargetWinHandle <> 0 Then
+                Dim ChildWinHandleList As IntPtr() = NativeMethods.GetChildWindows(TargetWinHandle)
+                For Each objIntPtr In ChildWinHandleList
+                    Dim Buf As String = ""
+                    Buf = StrDup(255, " ")
+                    Dim Ln As Long
+                    Ln = SendMessageByString(objIntPtr, WM_GETTEXT, 255, Buf)
+                    If Buf.Contains("D:\MYOA\IM\OfficeIm.exe") Then
+                        SendMessage(TargetWinHandle, WM_close, 0&, 0&)
+                        If Not My.Computer.FileSystem.FileExists("D:\ImErrLog.txt") Then
+                            My.Computer.FileSystem.WriteAllText("D:\ImErrLog.txt", "", True)
+                            Dim NewWriter As System.IO.StreamWriter = My.Computer.FileSystem.OpenTextFileWriter("D:\ImErrLog.txt", True)
+                            NewWriter.WriteLine(DateTime.Now.ToString)
+                            NewWriter.Close()
+                            NewWriter = Nothing
+                        Else
+                            Dim NewWriter As System.IO.StreamWriter = My.Computer.FileSystem.OpenTextFileWriter("D:\ImErrLog.txt", True)
+                            NewWriter.WriteLine(DateTime.Now.ToString)
+                            NewWriter.Close()
+                            NewWriter = Nothing
+                        End If
+                        System.Diagnostics.Process.Start("D:\MYOA\IM\OfficeIm.exe")
+                    End If
+                Next
+            Else
+            End If
+            System.Threading.Thread.Sleep(60000)
+        Loop
+        Me.Close()
+    End Sub
+End Class
